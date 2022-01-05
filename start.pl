@@ -3,7 +3,7 @@
 :- ensure_loaded(server).
 
 main :-
-    server(8080),
+    server(80),
     repeat,
     sleep(10),
     fail.

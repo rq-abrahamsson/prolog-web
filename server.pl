@@ -12,6 +12,7 @@
 :- use_module(library(http/json_convert)).
 
 :- http_handler(root(hello_world), say_hi, []).
+:- http_handler(root(health), health, []).
 :- http_handler(root(list_modules), list_modules, []).
 :- http_handler(root(show_sudoku), show_sudoku, []).
 :- http_handler(root('show_sudoku.json'), show_sudoku_json, []).
@@ -47,6 +48,9 @@ blocks([N1, N2, N3|Ns1], [N4, N5, N6|Ns2], [N7,N8,N9|Ns3]) :-
 server(Port) :-
 	http_server(http_dispatch, [port(Port)]).
 
+health(_Request) :-
+	reply_json(ok).
+
 say_hi(_Request) :-
 	reply_html_page(title('Hello World'),
 	[ h1('Hello World'),
@@ -56,7 +60,7 @@ say_hi(_Request) :-
 	]).
 
 
-problem(1, P) :- % shokyuu
+problem(1, P) :-
 	P = [[1,_,_,8,_,4,_,_,_],
 		[_,2,_,_,_,_,4,5,6],
 		[_,_,3,2,_,5,_,_,_],

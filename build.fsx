@@ -22,9 +22,14 @@ let myRegistry = containerRegistry {
   enable_admin_user
 }
 
+let imageName = "prolog-image"
+
 let myWebApp = webApp {
   name "sudoku-prolog"
+  operating_system OS.Linux
   docker_use_azure_registry registryName
+  docker_image $"{imageName}" $"swipl ./app/start.pl"
+  docker_ci
 }
 
 let containerRegistryDeployment = arm {
@@ -36,12 +41,14 @@ let containerRegistryDeployment = arm {
 
 let deployment = arm {
   location Location.NorthEurope
-  add_resource myWebApp
+  add_resources [
+    myWebApp
+  ]
 }
 
 Target.initEnvironment ()
 
-Target.create "Deploy" (fun _ ->
+Target.create "DeployInfra" (fun _ ->
 
   let outputs =
     containerRegistryDeployment
@@ -52,12 +59,27 @@ Target.create "Deploy" (fun _ ->
       [
         $"docker-password-for-prologregistry", outputs.["container_registry_password"]
       ]
-  ()
+  |> ignore
+)
+
+Target.create "DeployApp" (fun _ ->
+  CreateProcess.fromRawCommand "/usr/local/bin/az" ["acr"; "login"; "--name"; $"{registryName}.azurecr.io"]
+  |> Proc.run
+  |> ignore
+
+  CreateProcess.fromRawCommand "/usr/local/bin/az" ["acr"; "build"; "--image"; imageName; "--registry"; registryName; "."]
+  |> Proc.run
+  |> ignore
+
 )
 
 Target.create "Default" ignore
 
-"Deploy"
+"DeployInfra"
+  ==> "DeployApp"
   ==> "Default"
+
+// "DeployApp"
+//   ==> "Default"
 
 Target.runOrDefaultWithArguments "Default"
