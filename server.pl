@@ -59,6 +59,16 @@ problem(1, P) :-
 		[8,_,1,_,_,_,7,_,_],
 		[_,_,_,1,2,3,_,8,_],
 		[2,_,5,_,_,_,_,_,9]].
+problem(2, P) :-
+	P = [[_,1,_,8,_,4,_,_,_],
+		[_,2,_,_,_,_,4,5,6],
+		[_,_,3,2,_,5,_,_,_],
+		[_,_,_,4,_,_,8,_,5],
+		[7,8,9,_,5,_,_,_,_],
+		[_,_,_,_,_,6,2,_,3],
+		[8,_,1,_,_,_,7,_,_],
+		[_,_,_,1,2,3,_,8,_],
+		[2,_,5,_,_,_,_,_,9]].
 
 sudoku_column([]) --> [].
 sudoku_column(Row) -->
@@ -77,12 +87,17 @@ sudoku_table(Rows) -->
 	html(table([\sudoku_rows(Rows)])) .
 
 
-show_sudoku(_Request) :-
-	problem(1, Problem), 
+show_sudoku(Request) :-
+	http_parameters(Request,
+			[
+			problem(ProblemNumber, [between(1, 2), default(1)])
+			]),
+	!,
+	problem(ProblemNumber, Problem),
 	sudoku_with_underscore_string(Problem, ProblemWithUnderscoreString), 
-	problem(1, Rows), 
+	problem(ProblemNumber, Rows),
 	sudoku(Rows), 
-	maplist(labeling([ff]), Rows), 
+	maplist(labeling([ff]), Rows),
 	http_log('Sudoku Board: ~w hej ~n', [Rows]),
 	reply_html_page(title('Sudoku'),
 		[ 
@@ -92,11 +107,16 @@ show_sudoku(_Request) :-
 			\sudoku_table(Rows)
 		]).
 
-show_sudoku_json(_Request) :-
+show_sudoku_json(Request) :-
+	http_parameters(Request,
+			[
+			problem(ProblemNumber, [between(1, 2), default(1)])
+			]),
+	!,
 	% sudoku(PrologOut),
-	problem(1, Rows), 
+	problem(ProblemNumber, Rows),
 	sudoku(Rows), 
-	maplist(labeling([ff]), Rows), 
+	maplist(labeling([ff]), Rows),
 	%,maplist(portray_clause, Rows),
 	prolog_to_json(Rows, JSONOut),
 	reply_json(JSONOut).
