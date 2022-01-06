@@ -11,9 +11,7 @@
 :- use_module(library(http/http_log)).
 :- use_module(library(http/json_convert)).
 
-:- http_handler(root(hello_world), say_hi, []).
 :- http_handler(root(health), health, []).
-:- http_handler(root(list_modules), list_modules, []).
 :- http_handler(root(show_sudoku), show_sudoku, []).
 :- http_handler(root('show_sudoku.json'), show_sudoku_json, []).
 
@@ -50,15 +48,6 @@ server(Port) :-
 
 health(_Request) :-
 	reply_json(ok).
-
-say_hi(_Request) :-
-	reply_html_page(title('Hello World'),
-	[ h1('Hello World'),
-	  p(['This example demonstrates generating HTML ',
-	     'messages from Prolog'
-	    ])
-	]).
-
 
 problem(1, P) :-
 	P = [[1,_,_,8,_,4,_,_,_],
@@ -111,25 +100,3 @@ show_sudoku_json(_Request) :-
 	%,maplist(portray_clause, Rows),
 	prolog_to_json(Rows, JSONOut),
 	reply_json(JSONOut).
-
-list_modules(_Request) :-
-	findall(M, current_module(M), List),
-	sort(List, Modules),
-	reply_html_page(title('Loaded Prolog modules'),
-					[ h1('Loaded Prolog modules'),
-						table([ \header	    % rule-invocation
-							| \modules(Modules) % rule-invocation
-							])
-					]).
-
-header -->
-	html(tr([th('Module'), th('File')])).
-
-modules([]) -->	[].
-modules([H|T]) --> module(H), modules(T).
-
-module(Module) -->
-	{ module_property(Module, file(Path)) }, !,
-	html(tr([td(Module), td(Path)])).
-module(Module) -->
-	html(tr([td(Module), td(-)])).
