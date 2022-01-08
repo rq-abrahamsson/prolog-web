@@ -1,4 +1,11 @@
 :- set_prolog_flag(double_quotes, chars).
+:- pack_install('sudoku_utils', [
+		url('https://github.com/rq-abrahamsson/sudoku_utils/archive/v0.0.11.zip'),
+		upgrade(true),
+		interactive(false)
+	]).
+
+:- use_module(library('sudoku_utils')).
 
 :- use_module(library(clpfd)).
 :- use_module(library(lists)).
@@ -15,60 +22,11 @@
 :- http_handler(root(show_sudoku), show_sudoku, []).
 :- http_handler(root('show_sudoku.json'), show_sudoku_json, []).
 
-sudoku(Rows) :-
-	length(Rows, 9), maplist(same_length(Rows), Rows),
-	append(Rows, Vs), Vs ins 1..9,
-	maplist(all_distinct, Rows),
-	transpose(Rows, Columns),
-	maplist(all_distinct, Columns),
-	Rows = [As,Bs,Cs,Ds,Es,Fs,Gs,Hs,Is],
-	blocks(As, Bs, Cs),
-	blocks(Ds, Es, Fs),
-	blocks(Gs, Hs, Is).
-
-fill_underscore_string(A, A) :- 
-	number(A),
-	!.
-fill_underscore_string(_, '_').
-
-fill_underscore_string_array(In, Out) :- 
-	maplist(fill_underscore_string, In, Out).
-
-sudoku_with_underscore_string(In, Out) :-
-	maplist(fill_underscore_string_array, In, Out).
-
-blocks([], [], []).
-blocks([N1, N2, N3|Ns1], [N4, N5, N6|Ns2], [N7,N8,N9|Ns3]) :-
-	all_distinct([N1,N2,N3,N4,N5,N6,N7,N8,N9]),
-	blocks(Ns1, Ns2, Ns3).
-
-
 server(Port) :-
 	http_server(http_dispatch, [port(Port)]).
 
 health(_Request) :-
 	reply_json(ok).
-
-problem(1, P) :-
-	P = [[1,_,_,8,_,4,_,_,_],
-		[_,2,_,_,_,_,4,5,6],
-		[_,_,3,2,_,5,_,_,_],
-		[_,_,_,4,_,_,8,_,5],
-		[7,8,9,_,5,_,_,_,_],
-		[_,_,_,_,_,6,2,_,3],
-		[8,_,1,_,_,_,7,_,_],
-		[_,_,_,1,2,3,_,8,_],
-		[2,_,5,_,_,_,_,_,9]].
-problem(2, P) :-
-	P = [[_,1,_,8,_,4,_,_,_],
-		[_,2,_,_,_,_,4,5,6],
-		[_,_,3,2,_,5,_,_,_],
-		[_,_,_,4,_,_,8,_,5],
-		[7,8,9,_,5,_,_,_,_],
-		[_,_,_,_,_,6,2,_,3],
-		[8,_,1,_,_,_,7,_,_],
-		[_,_,_,1,2,3,_,8,_],
-		[2,_,5,_,_,_,_,_,9]].
 
 sudoku_column([]) --> [].
 sudoku_column(Row) -->
@@ -120,3 +78,24 @@ show_sudoku_json(Request) :-
 	%,maplist(portray_clause, Rows),
 	prolog_to_json(Rows, JSONOut),
 	reply_json(JSONOut).
+
+problem(1, P) :-
+	P = [[1,_,_,8,_,4,_,_,_],
+		[_,2,_,_,_,_,4,5,6],
+		[_,_,3,2,_,5,_,_,_],
+		[_,_,_,4,_,_,8,_,5],
+		[7,8,9,_,5,_,_,_,_],
+		[_,_,_,_,_,6,2,_,3],
+		[8,_,1,_,_,_,7,_,_],
+		[_,_,_,1,2,3,_,8,_],
+		[2,_,5,_,_,_,_,_,9]].
+problem(2, P) :-
+	P = [[_,1,_,8,_,4,_,_,_],
+		[_,2,_,_,_,_,4,5,6],
+		[_,_,3,2,_,5,_,_,_],
+		[_,_,_,4,_,_,8,_,5],
+		[7,8,9,_,5,_,_,_,_],
+		[_,_,_,_,_,6,2,_,3],
+		[8,_,1,_,_,_,7,_,_],
+		[_,_,_,1,2,3,_,8,_],
+		[2,_,5,_,_,_,_,_,9]].
