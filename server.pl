@@ -99,3 +99,9 @@ problem(2, P) :-
 		[8,_,1,_,_,_,7,_,_],
 		[_,_,_,1,2,3,_,8,_],
 		[2,_,5,_,_,_,_,_,9]].
+
+get_env_with_default(Variable, _Default, OutValue) :-
+	getenv(Variable, OutValue),
+	!.
+
+get_env_with_default(_Variable, Default, Default).
