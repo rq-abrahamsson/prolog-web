@@ -17,10 +17,12 @@
 :- use_module(library(http/http_server)).
 :- use_module(library(http/http_log)).
 :- use_module(library(http/json_convert)).
+:- use_module(library(http/http_client)).
 
 :- http_handler(root(health), health, []).
 :- http_handler(root(show_sudoku), show_sudoku, []).
-- http_handler(root('show_sudoku.json'), show_sudoku_json, []).
+:- http_handler(root('show_sudoku.json'), show_sudoku_json, []).
+:- http_handler(root(solve_sudoku), solve_sudoku, []).
 
 server(Port) :-
 	http_server(http_dispatch, [port(Port)]).
@@ -43,6 +45,7 @@ sudoku_rows(Rows) -->
 
 sudoku_table(Rows) -->
 	html(table([\sudoku_rows(Rows)])) .
+
 
 show_sudoku(Request) :-
 	member(accept(Media), Request),
@@ -77,13 +80,30 @@ show_sudoku_json(Request) :-
 			problem(ProblemNumber, [between(1, 2), default(1)])
 			]),
 	!,
-	% sudoku(PrologOut),
 	problem(ProblemNumber, Rows),
 	sudoku(Rows), 
 	maplist(labeling([ff]), Rows),
-	%,maplist(portray_clause, Rows),
-	prolog_to_json(Rows, JSONOut),
-	reply_json(JSONOut).
+	reply_json(Rows).
+
+
+solve_sudoku(Request) :-
+	member(method(post), Request), !,
+	http_read_json_dict(Request, RowsJson),
+	remove_with_underscore_string(RowsJson, Rows),
+	sudoku(Rows),
+	maplist(labeling([ff]), Rows),
+	reply_json(Rows).
+
+remove_underscore_string(A, A) :-
+	number(A),
+	!.
+remove_underscore_string('null', _).
+
+remove_underscore_string_array(In, Out) :-
+	maplist(remove_underscore_string, In, Out).
+
+remove_with_underscore_string(In, Out) :-
+	maplist(remove_underscore_string_array, In, Out).
 
 problem(1, P) :-
 	P = [[1,_,_,8,_,4,_,_,_],
