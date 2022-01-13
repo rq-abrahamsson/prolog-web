@@ -10,9 +10,9 @@
 :- use_module(library(clpfd)).
 :- use_module(library(lists)).
 
+:- use_module(library(http/html_write)).
 :- use_module(library(http/thread_httpd)).
 :- use_module(library(http/http_dispatch)).
-:- use_module(library(http/html_write)).
 :- use_module(library(http/http_json)).
 :- use_module(library(http/http_server)).
 :- use_module(library(http/http_log)).
@@ -20,7 +20,7 @@
 
 :- http_handler(root(health), health, []).
 :- http_handler(root(show_sudoku), show_sudoku, []).
-:- http_handler(root('show_sudoku.json'), show_sudoku_json, []).
+- http_handler(root('show_sudoku.json'), show_sudoku_json, []).
 
 server(Port) :-
 	http_server(http_dispatch, [port(Port)]).
@@ -44,8 +44,9 @@ sudoku_rows(Rows) -->
 sudoku_table(Rows) -->
 	html(table([\sudoku_rows(Rows)])) .
 
-
 show_sudoku(Request) :-
+	member(accept(Media), Request),
+	member(media(text/html, _, _, _), Media),
 	http_parameters(Request,
 			[
 			problem(ProblemNumber, [between(1, 2), default(1)])
@@ -64,6 +65,11 @@ show_sudoku(Request) :-
 			h1('Sudoku solution'),
 			\sudoku_table(Rows)
 		]).
+
+show_sudoku(Request) :-
+	member(accept(Media), Request),
+	member(media(application/json, _, _, _), Media),
+	show_sudoku_json(Request).
 
 show_sudoku_json(Request) :-
 	http_parameters(Request,
